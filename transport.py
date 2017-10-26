@@ -57,6 +57,7 @@ class TelNetTransport(Transport):
             self.client.write(self.to_bytes(device['username'] + "\n"))
             self.client.read_until(self.to_bytes("Password: "))
             self.client.write(self.to_bytes(device['password'] + "\n"))
+            self.client.read_until(self.to_bytes('<will not be found'), timeout=0.1)
             yield
         except KeyError as e:#Exception as e:
             raise FailedDevice(e)
@@ -69,7 +70,8 @@ class TelNetTransport(Transport):
         self.client.write(self.to_bytes(command + "\n"))
         result = self.client.read_until(self.to_bytes('<will not be found'), timeout=0.1)
         result = result.decode('utf-8')[len(command)+1:]
-        return result, None
+        result = ''.join([i for i in result.split('\r\n')[:-1]])
+        return result.strip(), None
 
 TRANSPORT = {
         "ssh": SSHTransport,

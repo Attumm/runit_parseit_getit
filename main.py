@@ -56,7 +56,8 @@ COMMANDS = {
                 command("top ten processes by memory consumption", "ps -aux |sort -nrk 4| head -10 "),
                 command("top ten proceses by cpu consumtpion", "ps -aux |sort -nrk 3| head -10 "),
                 command("disk space", "df -h "),
-                command("current runlevel", "runlevel")
+                command("current runlevel", "runlevel"),
+                command("display input", "echo 'hello world'")
             ],
             "users": [command("current logged in users", "w"),]
         }]
@@ -78,6 +79,7 @@ for device in devices:
                             continue
                         stdout, stderr = transport.run_command(command, results)
                         results[f'{title}'] = {
+                            'command': command,
                             'stdout': stdout,
                             'stderr': stderr,
                             'formatted': parse(device["type"], command, stdout, stderr, results),
