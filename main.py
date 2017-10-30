@@ -4,15 +4,29 @@ from parsing import parse
 # get devices from invetory system
 devices = [ 
         {
-            #"hostname": "127.0.0.1",
-            "hostname": "192.168.33.11",
+            "hostname": "processing",
+            "ip": "192.168.33.11",
+            "username": "vagrant",
+            "password": "vagrant",
+            "port": 23,
+            "type": "linux",
+            "transport": "telnet",
+        }, {
+            "hostname": "processing",
+            "ip": "127.0.0.1",
             "username": "vagrant",
             "password": "vagrant",
             "port": 2222,
             "type": "linux",
-            "gather": ["hostname", "network", "health"],
-            #"transport": "ssh",
-            "transport": "telnet",
+            "transport": "ssh",
+        }, {
+            "hostname": "processing",
+            "ip": "127.0.0.1",
+            "username": "vagrant",
+            "password": "vagrant",
+            "port": 2222,
+            "type": "linux",
+            "transport": "netmiko",
         }
 ]
 
@@ -26,14 +40,6 @@ devices = [
 # run one command
 # run a list of commands
 # run a list of commands with input from older commands
-#COMMANDS = {
-#        "linux": [{
-#            "hostname": ["hostname", "dnsdomainname"],
-#            "network": ["ip addr show", "ip addr eth0", "hostname -I", "cat /etc/hosts"],
-#            "health": ["free", "ps -aux |sort -nrk 4| head -10 ", "ps -aux |sort -nrk 3| head -10 ", "df -h ", "runlevel"],
-#            "users": ["w",],
-#        }]
-#}
 
 from collections import namedtuple
 command = namedtuple('Command', 'title command')
@@ -59,13 +65,10 @@ COMMANDS = {
                 command("current runlevel", "runlevel"),
                 command("display input", "echo 'hello world'")
             ],
-            "users": [command("current logged in users", "w"),]
-        }]
+        },{"users": [command("current logged in users", "w"),]}],
 }
 
 
-
-from pprint import pprint as pp
 total = []
 for device in devices:
     results = {}
@@ -75,8 +78,6 @@ for device in devices:
             for round_, available_commands in enumerate(COMMANDS[device['type']]):
                 for available_gather, commands in available_commands.items():
                     for title, command in commands:
-                        if available_gather not in device['gather']:
-                            continue
                         stdout, stderr = transport.run_command(command, results)
                         results[f'{title}'] = {
                             'command': command,
