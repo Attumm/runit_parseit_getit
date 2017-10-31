@@ -29,6 +29,8 @@ devices = [
             "transport": "netmiko",
         }
 ]
+# test only on device
+devices = [devices[1],]
 
 # set Commands for type,
 # for each type there is an list of dictonaries
@@ -43,47 +45,57 @@ devices = [
 
 from collections import namedtuple
 command = namedtuple('Command', 'title command')
+def command(title, command, fact=None):
+    return locals()
+
+
 COMMANDS = {
         "linux": [{
             "hostname": [
                 command("hostname", "hostname"),
-                command("hostname from dns", "dnsdomainname"),
+                #command("hostname from dns", "dnsdomainname"),
+                #command("distrubtion", "cat /etc/*-release"),
             ], 
             "network": [
                 command("network information", "ip addr show"), 
-                command("ip addr on eht0", "ip addr show lo"),
-                command("ipv4", "hostname -I"),
-                command("hosts file dns", "cat /etc/hosts"),
-                command("neighbours", "ip neigh"),
-                command("show routing table", "ip route show"),
+                command("ipv4 addresses", "hostname -I"),
+                #command("ip addr on eht0", "ip addr show lo"),
+                #command("ipv4", "hostname -I"),
+                #command("hosts file dns", "cat /etc/hosts"),
+                #command("neighbours", "ip neigh"),
+                #command("show routing table", "ip route show"),
             ],
             "health": [
                 command("display memory in megabytes", "free -m"),
-                command("top ten processes by memory consumption", "ps -aux |sort -nrk 4| head -10 "),
-                command("top ten proceses by cpu consumtpion", "ps -aux |sort -nrk 3| head -10 "),
-                command("disk space", "df -h "),
-                command("current runlevel", "runlevel"),
-                command("display input", "echo 'hello world'")
+                #command("top ten processes by memory consumption", "ps -aux |sort -nrk 4| head -10 "),
+                #command("top ten proceses by cpu consumtpion", "ps -aux |sort -nrk 3| head -10 "),
+                #command("cpu model", """cat /proc/cpuinfo | grep 'model name' | tail -n 1 | awk '{ print $4,$5,$6 }'"""),
+                #command("cpu core", "cat /proc/cpuinfo | grep 'model name' | wc -l"),
+                command("disk space", "df -h --total"),
+                #command("current runlevel", "runlevel"),
+                #command("display input", "echo 'hello world'")
             ],
-        },{"users": [command("current logged in users", "w"),]}],
+        },
+        #{"users": [command("current logged in users", "w"),]}
+        ],
 }
 
 
 total = []
 for device in devices:
     results = {}
+    facts = {}
     transport = get_transport(device.get('transport'))
     try:
         with transport.connection(device):
             for round_, available_commands in enumerate(COMMANDS[device['type']]):
                 for available_gather, commands in available_commands.items():
-                    for title, command in commands:
-                        stdout, stderr = transport.run_command(command, results)
-                        results[f'{title}'] = {
-                            'command': command,
-                            'stdout': stdout,
-                            'stderr': stderr,
-                            'formatted': parse(device["type"], command, stdout, stderr, results),
+                    for command in commands:
+                        result = transport.run_command(command['command'], results)
+                        results[f'{command["title"]}'] = {
+                            'command': command['command'],
+                            'result': result,
+                            'formatted': parse(device["type"], command['command'], result, results),
                         }
 
     except FailedDevice as e:

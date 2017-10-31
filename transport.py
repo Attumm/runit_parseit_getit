@@ -30,7 +30,7 @@ class SSHTransport(Transport):
             self.client.connect(device['ip'], port=device['port'],
                     username=device['username'], password=device['password'])
             yield
-        except KeyError as e:#Exception as e:
+        except Exception as e:
             raise FailedDevice(e)
 
         finally:
@@ -38,7 +38,7 @@ class SSHTransport(Transport):
 
     def run_command(self, command, gathered_results):
         stdin, stdout, stderr = self.client.exec_command(command)
-        return stdout.read().decode('utf-8'), stderr.read().decode('utf-8')
+        return stdout.read().decode('utf-8') + stderr.read().decode('utf-8')
 
 
 class TelNetTransport(Transport):
@@ -68,8 +68,8 @@ class TelNetTransport(Transport):
         self.client.write(self.to_bytes(command + "\n"))
         result = self.client.read_until(self.to_bytes('<waiting for the timeout'), timeout=0.1)
         result = result.decode('utf-8')[len(command)+1:]
-        result = ' '.join([i for i in result.split('\r\n')[:-1]])
-        return result.strip(), None
+        result = '\n'.join([i for i in result.split('\r\n')[:-1]])
+        return result.strip()
 
 
 class NetMikoTransport(Transport):
@@ -85,11 +85,13 @@ class NetMikoTransport(Transport):
             raise FailedDevice(e)
 
         finally:
-            self.client.disconnect()
+            try:
+                self.client.disconnect()
+            except Exception as e:
+                pass
 
     def run_command(self, command, gathered_results):
-        stdout = self.client.send_command(command)
-        return stdout, stdout
+        return self.client.send_command(command)
 
 TRANSPORT = {
         "ssh": SSHTransport,
