@@ -4,7 +4,7 @@ import textfsm
 
 TEXTFSM_TEMPLATES = {
         "linux": {
-            "ip addr show": """
+            "`which ip` addr show": """
 Value Required Interface ([^:]+)
 Value MTU (\d+)
 Value State (\w+)
@@ -33,10 +33,10 @@ Start
   ^Swap:[\s]*${Swap} -> Record
         """,
         "df -h --total": """
-Value Required Size (\w+)
-Value Used (\w+)
-Value Available (\w+)
-Value Used_prec ([\d]+%)
+Value Required Size (\S*)
+Value Used (\S*)
+Value Available (\S*)
+Value Used_prec (\S*)
 
 Start
   ^total[\s]*${Size}[\s]*${Used}[\s]*${Available}[\s]*${Used_prec}
@@ -46,24 +46,9 @@ Start
 
 
 
-
-
-
 def parse_network(result, results):
     return result.strip()
 
-
-def clean_cat_release(raw, b):
-    print(raw)
-    formatted = {}
-    for item in raw.strip().split('\n'):
-        print('1')
-        print(item)
-        print('2')
-        print(item.split('='))
-        k, v = item.split('=')
-        formatted[k] = v
-    return formatted
 
 PARSING = {
     "linux": {

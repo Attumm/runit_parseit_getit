@@ -27,10 +27,30 @@ devices = [
             "port": 2222,
             "type": "linux",
             "transport": "netmiko",
+        }, {
+            "hostname": "processing",
+            "ip": "172.31.136.59",
+            "username": "mbijman",
+            "password": password,
+            "port": 22,
+            "type": "linux",
+            "transport": "ssh",
         }
 ]
 # test only on device
-devices = [devices[1],]
+from list_of_observer_ip import ips
+dev_ips = [i for i in ips if i['use'] == "DEV"]
+devices = [
+        {
+            "hostname": i["hostname"],
+            "ip": i["ip"],
+            "username": "mbijman",
+            "password": password,
+            "port": 22,
+            "type": "linux",
+            "transport": "netmiko",
+            } for i in dev_ips
+        ]
 
 # set Commands for type,
 # for each type there is an list of dictonaries
@@ -57,7 +77,7 @@ COMMANDS = {
                 #command("distrubtion", "cat /etc/*-release"),
             ], 
             "network": [
-                command("network information", "ip addr show"), 
+                command("network information", "`which ip` addr show"), 
                 command("ipv4 addresses", "hostname -I"),
                 #command("ip addr on eht0", "ip addr show lo"),
                 #command("ipv4", "hostname -I"),
@@ -66,11 +86,11 @@ COMMANDS = {
                 #command("show routing table", "ip route show"),
             ],
             "health": [
-                command("display memory in megabytes", "free -m"),
+                command("display memory in kb", "cat /proc/meminfo"),
                 #command("top ten processes by memory consumption", "ps -aux |sort -nrk 4| head -10 "),
                 #command("top ten proceses by cpu consumtpion", "ps -aux |sort -nrk 3| head -10 "),
-                #command("cpu model", """cat /proc/cpuinfo | grep 'model name' | tail -n 1 | awk '{ print $4,$5,$6 }'"""),
-                #command("cpu core", "cat /proc/cpuinfo | grep 'model name' | wc -l"),
+                command("cpu model", """cat /proc/cpuinfo | grep 'model name' | tail -n 1 | awk '{ print $4,$5,$6,$7 }'"""),
+                command("cpu core", "cat /proc/cpuinfo | grep 'model name' | wc -l"),
                 command("disk space", "df -h --total"),
                 #command("current runlevel", "runlevel"),
                 #command("display input", "echo 'hello world'")
